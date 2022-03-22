@@ -1,9 +1,13 @@
 from tkinter import *
+from pymysql import *
 import pymysql, openpyxl, os
 from openpyxl import Workbook
 from tkinter import messagebox
 from tkinter import ttk
 from tkcalendar import DateEntry
+import xlwt
+import pandas.io.sql as sql
+import sqlalchemy
 
 class Main:
     def __init__(self, root):
@@ -13,10 +17,9 @@ class Main:
         self.root.minsize(1370, 720)   
         self.root.config(bg="#FDEFF4")
         self.update_var = StringVar()
-        # self.order_form()
-        # self.allData()
-        # self.table()
-        # self.fetch_orders()
+        self.id_var = IntVar()
+        self.excelData()
+        
 
         # Login Frame
         self.username_var = StringVar()
@@ -36,12 +39,22 @@ class Main:
         self.txt_password.place(x=200,y=150)
 
         login_btn = Button(self.login,text="Login",bd=0,command=self.lg,font=("times new roman",14,"bold"),fg="#141E27",bg="#42C2FF").place(x=240,y=200,width=100, height=25)
-        # self.login.destroy()
-        # self.order.destroy()
-        # self.data.destroy()
         self.shortcut()
         
-
+    # pyinstaller -F --hidden-import "babel.numbers" order_management.py
+    # Above line for exporting our project from .py to .exe format
+    
+    # Save all Data from Data to an Excel Sheet
+    def excelData(self):
+        try:
+            engine = sqlalchemy.create_engine('mysql+pymysql://root:@localhost:3306/manage_orders')
+            # con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
+            df = sql.read_sql("select * from orders", engine)
+            df.to_excel("Order Data.xlsx")
+        except Exception as e:
+            print(e)
+    
+    # Short-Cuts
     def shortcut(self):
         try:
             self.root.bind("<Control-Key-s>", lambda event: self.insert_order())
@@ -95,7 +108,9 @@ class Main:
         self.q8_var = StringVar()
         self.c8_var = StringVar()
         self.search_by_var = StringVar()
+        self.search_by_var2 = StringVar()
         self.search_txt_var = StringVar()
+        self.search_txt_var2 = StringVar()
         self.txt_globe_var = StringVar()
 
         class CustomDateEntry(DateEntry):
@@ -623,16 +638,27 @@ class Main:
         self.data = Frame(root,bg="white", highlightbackground="black", highlightthickness=2)
         self.data.place(x=650, y=40, width=830, height=710)
 
-        lbl_search = Label(self.data,text="Search By", bg="white",font=("times new roma",10,"normal")).place(x=20, y=20)
+        lbl_search = Label(self.data,text="Search By", bg="white",font=("times new roma",10,"normal")).place(x=10, y=20)
 
-        combo_search = ttk.Combobox(self.data, textvariable=self.search_by_var, width=15, font=("times new roman",10,"normal"),state="readonly")
+        combo_search = ttk.Combobox(self.data, textvariable=self.search_by_var, width=12, font=("times new roman",10,"normal"),state="readonly")
         combo_search['values']=("Select","PartyName","DesignNo","OrderNo","status")
         combo_search.current(0)
-        combo_search.place(x=130,y=20)
+        combo_search.place(x=90,y=20)
 
-        txt_search = Entry(self.data, textvariable=self.search_txt_var, width=27, bg="#EEEEEE",bd=1).place(x=290,y=20,height=20)
-        btn_search = Button(self.data, text="Search", command=self.search_orders, bd=0).place(x=500,y=20,height=20,width=80)
-        btn_showall = Button(self.data, text="Show All", command=self.fetch_orders, bd=0).place(x=620,y=20,height=20,width=80)
+        txt_search = Entry(self.data, textvariable=self.search_txt_var, width=20, bg="#EEEEEE",bd=1).place(x=200,y=20,height=20)
+        # btn_search = Button(self.data, text="Search", command=self.search_orders, bd=0).place(x=500,y=20,height=20,width=80)
+        # btn_showall = Button(self.data, text="Show All", command=self.fetch_orders, bd=0).place(x=620,y=20,height=20,width=80)
+
+        # lbl_search2 = Label(self.data,text="Search By", bg="white",font=("times new roma",10,"normal")).place(x=350, y=20)
+
+        combo_search2 = ttk.Combobox(self.data, textvariable=self.search_by_var2, width=12, font=("times new roman",10,"normal"),state="readonly")
+        combo_search2['values']=("Select","PartyName","DesignNo","OrderNo","status")
+        combo_search2.current(0)
+        combo_search2.place(x=340,y=20)
+
+        txt_search2 = Entry(self.data, textvariable=self.search_txt_var2, width=20, bg="#EEEEEE",bd=1).place(x=450,y=20,height=20)
+        btn_search = Button(self.data, text="Search", command=self.search_orders, bd=0).place(x=600,y=20,height=20,width=80)
+        btn_showall = Button(self.data, text="Show All", command=self.fetch_orders, bd=0).place(x=700,y=20,height=20,width=80)
     
     # Table Frame
     def tableFrame(self):
@@ -648,73 +674,73 @@ class Main:
         scroll_y.config(command=self.order_table.yview)
 
         self.order_table.heading("id",text="ID")
-        self.order_table.column("id",width=20,anchor=CENTER)
+        self.order_table.column("id",width=20,anchor=CENTER, stretch=NO)
         self.order_table.heading("date",text="Date")
-        self.order_table.column("date",width=70,anchor=CENTER)
+        self.order_table.column("date",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("partyname",text="Party Name")
-        self.order_table.column("partyname",width=120,anchor=CENTER)
+        self.order_table.column("partyname",width=140,anchor=CENTER, stretch=NO)
         self.order_table.heading("orderno",text="Order No.")
-        self.order_table.column("status",width=80,anchor=CENTER)
+        self.order_table.column("status",width=80,anchor=CENTER, stretch=NO)
         self.order_table.heading("status",text="Status")
-        self.order_table.column("orderno",width=70,anchor=CENTER)
+        self.order_table.column("orderno",width=80,anchor=CENTER, stretch=NO)
         self.order_table.heading("designno",text="Design No.")
-        self.order_table.column("designno",width=80,anchor=CENTER)
+        self.order_table.column("designno",width=80,anchor=CENTER, stretch=NO)
         self.order_table.heading("pick",text="Pick")
-        self.order_table.column("pick",width=50,anchor=CENTER)
+        self.order_table.column("pick",width=50,anchor=CENTER, stretch=NO)
         self.order_table.heading("mtr",text="Meter")
-        self.order_table.column("mtr",width=40,anchor=CENTER)
+        self.order_table.column("mtr",width=40,anchor=CENTER, stretch=NO)
         self.order_table.heading("wq",text="Warp Quality")
-        self.order_table.column("wq",width=100,anchor=CENTER)
+        self.order_table.column("wq",width=100,anchor=CENTER, stretch=NO)
         self.order_table.heading("panno",text="Panno")
-        self.order_table.column("panno",width=50,anchor=CENTER)
+        self.order_table.column("panno",width=50,anchor=CENTER, stretch=NO)
         self.order_table.heading("d1",text="Den 1")
-        self.order_table.column("d1",width=70,anchor=CENTER)
+        self.order_table.column("d1",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q1",text="Qual. 1")
-        self.order_table.column("q1",width=70,anchor=CENTER)
+        self.order_table.column("q1",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c1",text="Color 1")
-        self.order_table.column("c1",width=70,anchor=CENTER)
+        self.order_table.column("c1",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d2",text="Den 2")
-        self.order_table.column("d2",width=70,anchor=CENTER)
+        self.order_table.column("d2",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q2",text="Qual. 2")
-        self.order_table.column("q2",width=70,anchor=CENTER)
+        self.order_table.column("q2",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c2",text="Color 2")
-        self.order_table.column("c2",width=70,anchor=CENTER)
+        self.order_table.column("c2",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d3",text="Den 3")
-        self.order_table.column("d3",width=70,anchor=CENTER)
+        self.order_table.column("d3",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q3",text="Qual. 3")
-        self.order_table.column("q3",width=70,anchor=CENTER)
+        self.order_table.column("q3",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c3",text="Color 3")
-        self.order_table.column("c3",width=70,anchor=CENTER)
+        self.order_table.column("c3",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d4",text="Den 4")
-        self.order_table.column("d4",width=70,anchor=CENTER)
+        self.order_table.column("d4",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q4",text="Qual. 4")
-        self.order_table.column("q4",width=70,anchor=CENTER)
+        self.order_table.column("q4",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c4",text="Color 4")
-        self.order_table.column("c4",width=70,anchor=CENTER)
+        self.order_table.column("c4",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d5",text="Den 5")
-        self.order_table.column("d5",width=70,anchor=CENTER)
+        self.order_table.column("d5",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q5",text="Qual. 5")
-        self.order_table.column("q5",width=70,anchor=CENTER)
+        self.order_table.column("q5",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c5",text="Color 5")
-        self.order_table.column("c5",width=70,anchor=CENTER)
+        self.order_table.column("c5",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d6",text="Den 6")
-        self.order_table.column("d6",width=70,anchor=CENTER)
+        self.order_table.column("d6",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q6",text="Qual. 6")
-        self.order_table.column("q6",width=70,anchor=CENTER)
+        self.order_table.column("q6",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c6",text="Color 6")
-        self.order_table.column("c6",width=70,anchor=CENTER)
+        self.order_table.column("c6",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d7",text="Den 7")
-        self.order_table.column("d7",width=70,anchor=CENTER)
+        self.order_table.column("d7",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q7",text="Qual. 7")
-        self.order_table.column("q7",width=70,anchor=CENTER)
+        self.order_table.column("q7",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c7",text="Color 7")
-        self.order_table.column("c7",width=70,anchor=CENTER)
+        self.order_table.column("c7",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("d8",text="Den 8")
-        self.order_table.column("d8",width=70,anchor=CENTER)
+        self.order_table.column("d8",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("q8",text="Qual. 8")
-        self.order_table.column("q8",width=70,anchor=CENTER)
+        self.order_table.column("q8",width=70,anchor=CENTER, stretch=NO)
         self.order_table.heading("c8",text="Color 8")
-        self.order_table.column("c8",width=70,anchor=CENTER)
+        self.order_table.column("c8",width=70,anchor=CENTER, stretch=NO)
         self.order_table["show"]="headings"
         self.order_table.pack(fill=BOTH,expand=1)
         self.order_table.bind("<ButtonRelease-1>",self.get_cursor)
@@ -749,47 +775,96 @@ class Main:
             if self.txt_partyname.get() == "" or self.txt_date.get() == "" or self.txt_orderno.get() == "" or self.txt_designno.get() == "" or self.txt_pick.get() == "" or self.txt_meter.get() == "":
                 messagebox.showwarning("Warning","Please select correct order to print.")
             else:
-                wb = openpyxl.load_workbook("Print.xlsx")
-                sheet1 = wb["Sheet1"]
-                sheet1['E2'].value = self.txt_partyname.get()
-                sheet1['B4'].value = self.txt_orderno.get()
-                sheet1['B5'].value = self.txt_date.get()
-                sheet1['B6'].value = self.txt_designno.get()
-                sheet1['B7'].value = self.txt_pick.get()
-                sheet1['B8'].value = self.txt_wq.get()
-                mtr = int(self.txt_meter.get()) / 2
-                sheet1['B9'].value = mtr
-                sheet1['B10'].value = self.txt_panno.get()
+                ask = messagebox.askquestion("IN LOOM","Do you want to mark this Order as IN LOOM?")
+                if ask != "yes":
+                    pass
+                else:
+                    self.txt_status.current(1)
+                    wb = openpyxl.load_workbook("Print.xlsx")
+                    sheet1 = wb["Sheet1"]
+                    sheet1['E2'].value = self.txt_partyname.get()
+                    sheet1['B4'].value = self.txt_orderno.get()
+                    sheet1['B5'].value = self.txt_date.get()
+                    sheet1['B6'].value = self.txt_designno.get()
+                    sheet1['B7'].value = self.txt_pick.get()
+                    sheet1['B8'].value = self.txt_wq.get()
+                    mtr = int(self.txt_meter.get()) / 2
+                    sheet1['B9'].value = mtr
+                    sheet1['B10'].value = self.txt_panno.get()
 
-                sheet1['F5'].value = self.txt_deniyar1.get()
-                sheet1['F6'].value = self.txt_deniyar2.get()
-                sheet1['F7'].value = self.txt_deniyar3.get()
-                sheet1['F8'].value = self.txt_deniyar4.get()
-                sheet1['F9'].value = self.txt_deniyar5.get()
-                sheet1['F10'].value = self.txt_deniyar6.get()
-                sheet1['F11'].value = self.txt_deniyar7.get()
-                sheet1['F12'].value = self.txt_deniyar8.get()
+                    sheet1['F5'].value = self.txt_deniyar1.get()
+                    sheet1['F6'].value = self.txt_deniyar2.get()
+                    sheet1['F7'].value = self.txt_deniyar3.get()
+                    sheet1['F8'].value = self.txt_deniyar4.get()
+                    sheet1['F9'].value = self.txt_deniyar5.get()
+                    sheet1['F10'].value = self.txt_deniyar6.get()
+                    sheet1['F11'].value = self.txt_deniyar7.get()
+                    sheet1['F12'].value = self.txt_deniyar8.get()
 
-                sheet1['G5'].value = self.txt_quality1.get()
-                sheet1['G6'].value = self.txt_quality2.get()
-                sheet1['G7'].value = self.txt_quality3.get()
-                sheet1['G8'].value = self.txt_quality4.get()
-                sheet1['G9'].value = self.txt_quality5.get()
-                sheet1['G10'].value = self.txt_quality6.get()
-                sheet1['G11'].value = self.txt_quality7.get()
-                sheet1['G12'].value = self.txt_quality8.get()
+                    sheet1['G5'].value = self.txt_quality1.get()
+                    sheet1['G6'].value = self.txt_quality2.get()
+                    sheet1['G7'].value = self.txt_quality3.get()
+                    sheet1['G8'].value = self.txt_quality4.get()
+                    sheet1['G9'].value = self.txt_quality5.get()
+                    sheet1['G10'].value = self.txt_quality6.get()
+                    sheet1['G11'].value = self.txt_quality7.get()
+                    sheet1['G12'].value = self.txt_quality8.get()
 
-                sheet1['H5'].value = self.txt_color1.get()
-                sheet1['H6'].value = self.txt_color2.get()
-                sheet1['H7'].value = self.txt_color3.get()
-                sheet1['H8'].value = self.txt_color4.get()
-                sheet1['H9'].value = self.txt_color5.get()
-                sheet1['H10'].value = self.txt_color6.get()
-                sheet1['H11'].value = self.txt_color7.get()
-                sheet1['H12'].value = self.txt_color8.get()
+                    sheet1['H5'].value = self.txt_color1.get()
+                    sheet1['H6'].value = self.txt_color2.get()
+                    sheet1['H7'].value = self.txt_color3.get()
+                    sheet1['H8'].value = self.txt_color4.get()
+                    sheet1['H9'].value = self.txt_color5.get()
+                    sheet1['H10'].value = self.txt_color6.get()
+                    sheet1['H11'].value = self.txt_color7.get()
+                    sheet1['H12'].value = self.txt_color8.get()
 
-                wb.save("Print.xlsx")
-                os.startfile("Print.xlsx","print")
+                    wb.save("Print.xlsx")
+                    os.startfile("Print.xlsx","print")
+
+
+                    con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
+                    cur = con.cursor()
+                    cur.execute("update orders set date=%s,partyname=%s,status=%s, designno=%s,pick=%s,mtr=%s,wq=%s,panno=%s,d1=%s,q1=%s,c1=%s,d2=%s,q2=%s,c2=%s,d3=%s,q3=%s,c3=%s,d4=%s,q4=%s,c4=%s,d5=%s,q5=%s,c5=%s,d6=%s,q6=%s,c6=%s,d7=%s,q7=%s,c7=%s,d8=%s,q8=%s,c8=%s, orderno=%s where id=%s",(
+                        self.txt_date.get(),
+                        self.txt_partyname.get(),
+                        self.txt_status.get(),
+                        self.txt_designno.get(),
+                        self.txt_pick.get(),
+                        self.txt_meter.get(),
+                        self.txt_wq.get(),
+                        self.txt_panno.get(),
+                        self.txt_deniyar1.get(),
+                        self.txt_quality1.get(),
+                        self.txt_color1.get(),
+                        self.txt_deniyar2.get(),
+                        self.txt_quality2.get(),
+                        self.txt_color2.get(),
+                        self.txt_deniyar3.get(),
+                        self.txt_quality3.get(),
+                        self.txt_color3.get(),
+                        self.txt_deniyar4.get(),
+                        self.txt_quality4.get(),
+                        self.txt_color4.get(),
+                        self.txt_deniyar5.get(),
+                        self.txt_quality5.get(),
+                        self.txt_color5.get(),
+                        self.txt_deniyar6.get(),
+                        self.txt_quality6.get(),
+                        self.txt_color6.get(),
+                        self.txt_deniyar7.get(),
+                        self.txt_quality7.get(),
+                        self.txt_color7.get(),
+                        self.txt_deniyar8.get(),
+                        self.txt_quality8.get(),
+                        self.txt_color8.get(),
+                        self.txt_orderno.get(),
+                        self.id_var
+                        ))
+                    con.commit()
+                    self.fetch_orders()
+                    con.close()
+                    self.excelData()
         except Exception as e:
             messagebox.showwarning("Warning","Something went wrong...")
 
@@ -884,6 +959,7 @@ class Main:
                     messagebox.showinfo("Success","Your order Updated Successfully")
                     self.fetch_orders()
                     con.close()
+                    self.excelData()
                 except Exception as e:
                     messagebox.showwarning("Warning","Something went wrong...")
         except Exception as e:
@@ -895,11 +971,16 @@ class Main:
             con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
             cur = con.cursor()
             if self.orderno_var.get() != "":
-                cur.execute("delete from orders where orderno=%s",self.orderno_var.get())
-                con.commit()
-                con.close()
-                messagebox.showinfo("Success","Your Order Deleted Successfully")
-                self.fetch_orders()
+                res=messagebox.askquestion('Delete Order', 'Do you really want to Delete this Order?')
+                if res != "yes":
+                    pass
+                else:
+                    cur.execute("delete from orders where orderno=%s",self.orderno_var.get())
+                    con.commit()
+                    con.close()
+                    messagebox.showinfo("Success","Your Order Deleted Successfully")
+                    self.fetch_orders()
+                    self.excelData()
             else:
                 messagebox.showwarning("Warning","Please select your order to delete")
         except Exception as e:
@@ -960,6 +1041,7 @@ class Main:
                         messagebox.showinfo("Success","Your order Inserted Successfully")
                         self.fetch_orders()
                         con.close()
+                        self.excelData()
                     else:
                         messagebox.showwarning("Warning","This Order No already exists.")
                         con.close()
@@ -970,16 +1052,20 @@ class Main:
             
     def search_orders(self):
         # print(self.search_by.get())
-        con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
-        cur = con.cursor()
-        cur.execute("select * from orders where "+str(self.search_by_var.get())+" LIKE '%"+str(self.search_txt_var.get())+"%'")
-        rows = cur.fetchall()
-        if len(rows)!=0:
-            self.order_table.delete(*self.order_table.get_children())
-            for row in rows:
-                self.order_table.insert('',END,values=row)
-            con.commit()
-        con.close()
+        try:
+            con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
+            cur = con.cursor()
+            cur.execute(f"select * from orders where {str(self.search_by_var.get())} = '{str(self.search_txt_var.get())}' and {str(self.search_by_var2.get())} = '{str(self.search_txt_var2.get())}'")
+            rows = cur.fetchall()
+            if len(rows)!=0:
+                self.order_table.delete(*self.order_table.get_children())
+                for row in rows:
+                    self.order_table.insert('',END,values=row)
+                con.commit()
+            con.close()
+        except Exception as e:
+            print(e)
+            
 
     # Clear All Fields
     def clear_orders(self):        

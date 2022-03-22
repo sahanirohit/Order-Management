@@ -1,4 +1,7 @@
 t = int(input())
 for n in range(t):
-    x = int(input())
-    print(100-x)
+    a, b, x, y = map(int, input().split())
+    if a*b <= x*y:
+        print("Yes")
+    else:
+        print("No")
