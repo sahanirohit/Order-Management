@@ -63,6 +63,8 @@ class Main:
             self.root.bind("<Control-Key-D>", lambda event: self.delete_orders())
             self.root.bind("<Control-Key-u>", lambda event: self.update_order())
             self.root.bind("<Control-Key-U>", lambda event: self.update_order())
+            self.root.bind("<Control-Key-F>", lambda event: self.search_orders())
+            self.root.bind("<Control-Key-f>", lambda event: self.search_orders())
             self.root.bind("<Control-Key-p>", lambda event: self.print())
             self.root.bind("<Control-Key-P>", lambda event: self.print())
             self.root.bind("<Control-Key-l>", lambda event: self.lg())
@@ -299,10 +301,11 @@ class Main:
             self.pending_frame.place_forget()
             self.order.place_forget()
             self.data.place_forget()
+            self.cancelled_frame.place_forget()
         except Exception as e:
             pass
 
-        self.completed_frame = Frame(root, bg="white", width=1430, height=700, highlightbackground="black", highlightthickness=2)
+        self.completed_frame = Frame(root, bg="white", width=1430, height=710, highlightbackground="black", highlightthickness=2)
         self.completed_frame.place(x=50, y=40)
         title = Label(self.completed_frame,text="All Completed Orders",font=("times new roman",14,"bold"),bg="white",fg="red").place(x=600, y=5)
 
@@ -402,6 +405,118 @@ class Main:
         con.close()
 
     
+    # CANCELLED Orders Data
+    def cancelled_orders(self):
+
+        try:
+            self.pending_frame.place_forget()
+            self.completed_frame.place_forget()
+            self.order.place_forget()
+            self.data.place_forget()
+            self.inloom_frame.place_forget()
+        except Exception as e:
+            pass
+
+        self.cancelled_frame = Frame(root, bg="white", width=1430, height=710, highlightbackground="black", highlightthickness=2)
+        self.cancelled_frame.place(x=50, y=40)
+        title = Label(self.cancelled_frame,text="All CANCELLED Orders",font=("times new roman",14,"bold"),bg="white",fg="red").place(x=600, y=5)
+
+
+        # IN LOOM Table Frame
+        self.cancelled_table = Frame(self.cancelled_frame, bg="white",highlightbackground="black",highlightthickness=1)
+        self.cancelled_table.place(x=8,y=40, width=1410, height=650)
+
+        scroll_x = Scrollbar(self.cancelled_table,orient=HORIZONTAL)
+        scroll_y = Scrollbar(self.cancelled_table,orient=VERTICAL)
+        self.cancelled_order_table = ttk.Treeview(self.cancelled_table,columns=("id","date","partyname","status","orderno","designno","pick","mtr","wq","panno","d1","q1","c1","d2","q2","c2","d3","q3","c3","d4","q4","c4","d5","q5","c5","d6","q6","c6","d7","q7","c7","d8","q8","c8"),xscrollcommand=scroll_x.set,yscrollcommand=scroll_y.set)
+        scroll_x.pack(side=BOTTOM, fill=X)
+        scroll_y.pack(side=RIGHT,fill=Y)
+        scroll_x.config(command=self.cancelled_order_table.xview)
+        scroll_y.config(command=self.cancelled_order_table.yview)
+
+        self.cancelled_order_table.heading("id",text="ID")
+        self.cancelled_order_table.column("id",width=20,anchor=CENTER)
+        self.cancelled_order_table.heading("date",text="Date")
+        self.cancelled_order_table.column("date",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("partyname",text="Party Name")
+        self.cancelled_order_table.column("partyname",width=90,anchor=CENTER)
+        self.cancelled_order_table.heading("orderno",text="Order No.")
+        self.cancelled_order_table.column("status",width=80,anchor=CENTER)
+        self.cancelled_order_table.heading("status",text="Status")
+        self.cancelled_order_table.column("orderno",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("designno",text="Design No.")
+        self.cancelled_order_table.column("designno",width=80,anchor=CENTER)
+        self.cancelled_order_table.heading("pick",text="Pick")
+        self.cancelled_order_table.column("pick",width=50,anchor=CENTER)
+        self.cancelled_order_table.heading("mtr",text="Meter")
+        self.cancelled_order_table.column("mtr",width=40,anchor=CENTER)
+        self.cancelled_order_table.heading("wq",text="Warp Quality")
+        self.cancelled_order_table.column("wq",width=100,anchor=CENTER)
+        self.cancelled_order_table.heading("panno",text="Panno")
+        self.cancelled_order_table.column("panno",width=50,anchor=CENTER)
+        self.cancelled_order_table.heading("d1",text="Den 1")
+        self.cancelled_order_table.column("d1",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q1",text="Qual. 1")
+        self.cancelled_order_table.column("q1",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c1",text="Color 1")
+        self.cancelled_order_table.column("c1",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d2",text="Den 2")
+        self.cancelled_order_table.column("d2",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q2",text="Qual. 2")
+        self.cancelled_order_table.column("q2",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c2",text="Color 2")
+        self.cancelled_order_table.column("c2",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d3",text="Den 3")
+        self.cancelled_order_table.column("d3",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q3",text="Qual. 3")
+        self.cancelled_order_table.column("q3",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c3",text="Color 3")
+        self.cancelled_order_table.column("c3",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d4",text="Den 4")
+        self.cancelled_order_table.column("d4",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q4",text="Qual. 4")
+        self.cancelled_order_table.column("q4",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c4",text="Color 4")
+        self.cancelled_order_table.column("c4",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d5",text="Den 5")
+        self.cancelled_order_table.column("d5",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q5",text="Qual. 5")
+        self.cancelled_order_table.column("q5",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c5",text="Color 5")
+        self.cancelled_order_table.column("c5",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d6",text="Den 6")
+        self.cancelled_order_table.column("d6",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q6",text="Qual. 6")
+        self.cancelled_order_table.column("q6",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c6",text="Color 6")
+        self.cancelled_order_table.column("c6",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d7",text="Den 7")
+        self.cancelled_order_table.column("d7",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q7",text="Qual. 7")
+        self.cancelled_order_table.column("q7",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c7",text="Color 7")
+        self.cancelled_order_table.column("c7",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("d8",text="Den 8")
+        self.cancelled_order_table.column("d8",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("q8",text="Qual. 8")
+        self.cancelled_order_table.column("q8",width=70,anchor=CENTER)
+        self.cancelled_order_table.heading("c8",text="Color 8")
+        self.cancelled_order_table.column("c8",width=70,anchor=CENTER)
+        self.cancelled_order_table["show"]="headings"
+        self.cancelled_order_table.pack(fill=BOTH,expand=1)
+
+        con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
+        cur = con.cursor()
+        cur.execute("select * from orders where status LIKE '%Cancelled%'")
+        rows = cur.fetchall()
+        if len(rows)!=0:
+            self.cancelled_order_table.delete(*self.cancelled_order_table.get_children())
+            for row in rows:
+                self.cancelled_order_table.insert('',END,values=row)
+            con.commit()
+        con.close()
+
+
     # IN LOOM Orders Data
     def inloom_orders(self):
 
@@ -410,6 +525,7 @@ class Main:
             self.completed_frame.place_forget()
             self.order.place_forget()
             self.data.place_forget()
+            self.cancelled_frame.place_forget()
         except Exception as e:
             pass
 
@@ -516,16 +632,16 @@ class Main:
     # pending Orders Data
     def pending_orders(self):
 
-        
         try:
             self.completed_frame.place_forget()
             self.inloom_frame.place_forget()
+            self.cancelled_frame.place_forget()
             self.order.place_forget()
             self.data.place_forget()
         except Exception as e:
             pass
         
-        self.pending_frame = Frame(root, bg="white", width=1430, height=700, highlightbackground="black", highlightthickness=2)
+        self.pending_frame = Frame(root, bg="white", width=1430, height=710, highlightbackground="black", highlightthickness=2)
         self.pending_frame.place(x=50, y=40)
         title = Label(self.pending_frame,text="All Pending Orders",font=("times new roman",14,"bold"),bg="white",fg="red").place(x=600, y=5)
 
@@ -631,6 +747,7 @@ class Main:
         mymenu.add_command(label="Pending Orders", command=self.pending_orders)
         mymenu.add_command(label="IN LOOM Orders", command=self.inloom_orders)
         mymenu.add_command(label="Completed Orders", command=self.completed_orders)
+        mymenu.add_command(label="Cancelled Orders", command=self.cancelled_orders)
         self.root.config(menu=mymenu)
 
     # Data Frame
@@ -761,6 +878,11 @@ class Main:
 
         try:
             self.inloom_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.cancelled_frame.place_forget()
         except Exception as e:
             pass
         self.order_form()
@@ -898,7 +1020,7 @@ class Main:
         try:
             con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
             cur = con.cursor()
-            cur.execute("select * from orders")
+            cur.execute("select * from orders where status = 'pending'")
             rows = cur.fetchall()
             if len(rows)!=0:
                 self.order_table.delete(*self.order_table.get_children())
@@ -1055,16 +1177,43 @@ class Main:
         try:
             con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
             cur = con.cursor()
-            cur.execute(f"select * from orders where {str(self.search_by_var.get())} = '{str(self.search_txt_var.get())}' and {str(self.search_by_var2.get())} = '{str(self.search_txt_var2.get())}'")
-            rows = cur.fetchall()
-            if len(rows)!=0:
-                self.order_table.delete(*self.order_table.get_children())
-                for row in rows:
-                    self.order_table.insert('',END,values=row)
-                con.commit()
-            con.close()
+            if self.search_txt_var.get() == "" and self.search_txt_var2.get() != "":
+                cur.execute(f"select * from orders where {str(self.search_by_var2.get())} LIKE '%{str(self.search_txt_var2.get())}%'")
+                rows = cur.fetchall()
+                if len(rows)!=0:
+                    self.order_table.delete(*self.order_table.get_children())
+                    for row in rows:
+                        self.order_table.insert('',END,values=row)
+                    con.commit()
+                else:
+                    messagebox.showwarning("Warning","Data not available")
+                con.close()
+            elif self.search_txt_var2.get() == "" and self.search_txt_var.get() != "":
+                cur.execute(f"select * from orders where {str(self.search_by_var.get())} LIKE '%{str(self.search_txt_var.get())}%'")
+                rows = cur.fetchall()
+                if len(rows)!=0:
+                    self.order_table.delete(*self.order_table.get_children())
+                    for row in rows:
+                        self.order_table.insert('',END,values=row)
+                    con.commit()
+                else:
+                    messagebox.showwarning("Warning","Data not available")
+                con.close()
+            elif self.search_txt_var2.get() != "" and self.search_txt_var.get() != "":
+                cur.execute(f"select * from orders where {str(self.search_by_var.get())} LIKE '%{str(self.search_txt_var.get())}%' and {str(self.search_by_var2.get())} LIKE '%{str(self.search_txt_var2.get())}%'")
+                rows = cur.fetchall()
+                if len(rows)!=0:
+                    self.order_table.delete(*self.order_table.get_children())
+                    for row in rows:
+                        self.order_table.insert('',END,values=row)
+                    con.commit()
+                else:
+                    messagebox.showwarning("Warning","Data not available")
+                con.close()
+            else:
+                messagebox.showerror("Error","Please enter required details.")
         except Exception as e:
-            print(e)
+            messagebox.showwarning("Warning","Please login to search your order.")
             
 
     # Clear All Fields

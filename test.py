@@ -1,36 +1,12 @@
-import tkinter as tk
-from tkinter import *
- 
-class MainWindow:
-    def __init__(self, master):
-        self.master = master
- 
- 
-        self.frame = tk.Frame(self.master, width = 300, height = 300)
-        self.frame.pack()
- 
-        self.label = tk.Label(self.frame, text = "This is some sample text")
-        self.label.place( x = 80, y = 20)
- 
-        self.button = tk.Button(self.frame, text = "Button")
-        self.button.place( x = 120, y = 80)
- 
-        self.entry = tk.Entry(self.frame)
-        self.entry.place( x = 80, y = 160)
-        self.btn_var = StringVar()
-        self.test()
-        self.master.bind("<Key>", lambda event: self.key)
- 
-    def test(self):
-        self.abc = Button(self.master, text="Hello World", command=self.key)
-        self.abc.bind("<Key>", lambda event: self.key)
-        self.abc.pack(padx=15, pady=20)
-    def key(self, event):
-        key = event.char
-        print(key, 'is pressed')    
+import win32print
 
-    
-
-master = Tk()
-root = MainWindow(master)
-master.mainloop()
+# hello = win32print.OpenPrinter("EPSON L3150 Series")
+file = "Print.xlsx"
+pHandle = win32print.GetDefaultPrinter()
+printer = win32print.OpenPrinter(pHandle)
+job = win32print.StartDocPrinter(file, None, "RAW")
+# win32print.StartDocPrinter(printer)
+win32print.WritePrinter(printer, "Print Me Puhleeezzz!")
+win32print.EndPagePrinter(printer)
+print(pHandle)
+print(printer)
