@@ -1,12 +1,8 @@
-import win32print
-
-# hello = win32print.OpenPrinter("EPSON L3150 Series")
-file = "Print.xlsx"
-pHandle = win32print.GetDefaultPrinter()
-printer = win32print.OpenPrinter(pHandle)
-job = win32print.StartDocPrinter(file, None, "RAW")
-# win32print.StartDocPrinter(printer)
-win32print.WritePrinter(printer, "Print Me Puhleeezzz!")
-win32print.EndPagePrinter(printer)
-print(pHandle)
-print(printer)
+from tkinter import *
+from tkinter.tix import *
+root = Tk()
+btn1 = Button(root, text="hello")
+btn1.grid(row=0, column=0)
+balloon = Balloon(root, bg="white", title="Help")
+balloon.bind_widget(btn1, balloonmsg="Click to Exit")
+root.mainloop()

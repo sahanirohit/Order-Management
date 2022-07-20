@@ -1,24 +1,38 @@
+from enum import auto
+from math import ldexp
 from tkinter import *
+from turtle import width
+from numpy import append
 from pymysql import *
 import pymysql, openpyxl, os
-from openpyxl import Workbook
+from openpyxl import load_workbook
 from tkinter import messagebox
 from tkinter import ttk
 from tkcalendar import DateEntry
 import xlwt
 import pandas.io.sql as sql
 import sqlalchemy
+import pandas as pd
+from openpyxl.styles import Alignment
+import datetime
+from datetime import date, timedelta
+from collections import defaultdict
+
 
 class Main:
-    def __init__(self, root):
+    def __init__(self, root, frame):
         self.root = root
         self.root.state("zoomed")
         self.root.title("Order Management System")
         self.root.minsize(1370, 720)   
         self.root.config(bg="#FDEFF4")
         self.update_var = StringVar()
+        self.partyname_data = StringVar()
+        self.status_data = StringVar()
         self.id_var = IntVar()
         self.excelData()
+        
+        # self.Demo()
         
 
         # Login Frame
@@ -38,7 +52,8 @@ class Main:
         self.txt_password = Entry(self.login,font=("times new roman",14), show="*", textvariable=self.password_var, bg="#EEEEEE",bd=0)
         self.txt_password.place(x=200,y=150)
 
-        login_btn = Button(self.login,text="Login",bd=0,command=self.lg,font=("times new roman",14,"bold"),fg="#141E27",bg="#42C2FF").place(x=240,y=200,width=100, height=25)
+        self.login_btn = Button(self.login,text="Login",bd=1,command=self.lg,font=("times new roman",14,"bold"),fg="black",bg="yellow").place(x=240,y=200,width=100, height=25)
+        
         self.shortcut()
         
     # pyinstaller -F --hidden-import "babel.numbers" order_management.py
@@ -53,6 +68,8 @@ class Main:
             df.to_excel("Order Data.xlsx")
         except Exception as e:
             print(e)
+
+   
     
     # Short-Cuts
     def shortcut(self):
@@ -65,6 +82,8 @@ class Main:
             self.root.bind("<Control-Key-U>", lambda event: self.update_order())
             self.root.bind("<Control-Key-F>", lambda event: self.search_orders())
             self.root.bind("<Control-Key-f>", lambda event: self.search_orders())
+            self.root.bind("<Control-Key-A>", lambda event: self.fetch_orders())
+            self.root.bind("<Control-Key-a>", lambda event: self.fetch_orders())
             self.root.bind("<Control-Key-p>", lambda event: self.print())
             self.root.bind("<Control-Key-P>", lambda event: self.print())
             self.root.bind("<Control-Key-l>", lambda event: self.lg())
@@ -74,6 +93,31 @@ class Main:
 
     # Order Form
     def order_form(self):
+        try:
+            self.cancelled_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.inloom_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.pending_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.completed_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.short_data.place_forget()
+        except Exception as e:
+            pass
+
         # self.updateShortCut()
         # ======== All Variables ========= #
         self.date_var = StringVar()
@@ -114,27 +158,19 @@ class Main:
         self.search_txt_var = StringVar()
         self.search_txt_var2 = StringVar()
         self.txt_globe_var = StringVar()
-
-        class CustomDateEntry(DateEntry):
-
-            def _select(self, event=None):
-                date = self._calendar.selection_get()
-                if date is not None:
-                    self._set_text(date.strftime('%d/%m/%Y'))
-                    self.event_generate('<<DateEntrySelected>>')
-                self._top_cal.withdraw()
-                if 'readonly' not in self.state():
-                    self.focus_set()
+        self.txt_lastorder_var = StringVar()
 
         
         self.order = Frame(self.root,bg="white", highlightbackground="black", highlightthickness=2)
         self.order.place(x=60,y=40,width=590,height=710)
         title = Label(self.order, text="Order Form",font=("times new roman",16,"bold"),bg="yellow").pack(fill=X)
+
+        self.lastorder = Label(self.order, text="Last Order", font=("times new roman",10,"bold"),bg="yellow").place(x=10, y=5)
+        self.txt_lastorder = Entry(self.order, textvariable=self.txt_lastorder_var, width= 12, background= "#ffffff",bd=0).place(x=80, y=5)
             
         # Row 1
         date = Label(self.order,text="Date",font=("times new roman",12,"normal"),bg="white").place(x=20,y=40)
-        self.txt_date = CustomDateEntry(self.order, width= 17, textvariable=self.date_var, bg="#EEEEEE",bd=0)
-        self.txt_date._set_text(self.txt_date._date.strftime('%d/%m/%Y'))
+        self.txt_date = DateEntry(self.order, width= 17, textvariable=self.date_var, bg="#EEEEEE",bd=0, date_pattern='yyyy-mm-dd')
         self.txt_date.place(x=20,y=70)
 
         partyname = Label(self.order,text="Party Name",font=("times new roman",12,"normal"),bg="white").place(x=160,y=40)
@@ -292,16 +328,87 @@ class Main:
         self.btn_print = Button(self.order,text="PRINT", command=self.print, font=("times new roman",8,"normal"),bd=0).place(x=360,y=660,width=80, height=30)
 
         self.btn_clear = Button(self.order,text="CLEAR", command=self.clear_orders, font=("times new roman",8,"normal"),bd=0).place(x=485,y=660,width=80, height=30)
+
+    # Short Data
+    def shortData(self):
+        try:
+            self.pending_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.completed_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.order.place_forget()
+        except Exception as e:
+            pass
         
+        try:
+            self.data.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.cancelled_frame.place_forget()
+        except Exception as e:
+            pass
+        try:
+            self.inloom_frame.place_forget()
+        except Exception as e:
+            pass
+
+        self.short_date_var = StringVar()
+        self.short_date_var2 = StringVar()
+
+        self.short_data = Frame(self.root, bg="white",highlightbackground="black",highlightthickness=2)
+        self.short_data.place(x=480, y=200, width=500, height=300)
+        title = Label(self.short_data, text="Get Short Data Here",font=("times new roman",20,"bold"),bg="white",fg="#D82148").place(x=135,y=22)
+
+        partyname = Label(self.short_data, text="Party Name",font=("times new roman",14),bg="white",fg="black").place(x=100,y=110)
+        self.txt_data_partyname = Entry(self.short_data, textvariable=self.partyname_data, font=("times new roman",14), bg="#EEEEEE",bd=0)
+        self.txt_data_partyname.place(x=200,y=110)
+
+        status = Label(self.short_data, text="Status",font=("times new roman",14),bg="white",fg="black").place(x=100,y=150)
+        self.txt_data_status = Entry(self.short_data, textvariable=self.status_data, font=("times new roman",14), bg="#EEEEEE",bd=0)
+        self.txt_data_status.place(x=200,y=150)
+
+        # Row 1
+        date = Label(self.short_data,text="Date",font=("times new roman",12,"normal"),bg="white").place(x=100,y=70)
+        self.txt_date = DateEntry(self.short_data, width= 10, textvariable=self.short_date_var, bg="#EEEEEE",bd=0, date_pattern='yyyy-mm-dd')
+        self.txt_date.place(x=200,y=70)
+
+        self.txt_date2 = DateEntry(self.short_data, width= 10, textvariable=self.short_date_var2, bg="#EEEEEE",bd=0, date_pattern='yyyy-mm-dd')
+        self.txt_date2.place(x=300,y=70)
+
+        short_data_btn = Button(self.short_data,text="GET DATA",bd=0,command=self.getData,font=("times new roman",10,"bold"),fg="#141E27",bg="#42C2FF").place(x=240,y=200,width=100, height=25)
     
     # Completed Orders Data
     def completed_orders(self):
 
         try:
             self.pending_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.order.place_forget()
+        except Exception as e:
+            pass
+        
+        try:
             self.data.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.cancelled_frame.place_forget()
+        except Exception as e:
+            pass
+        try:
+            self.inloom_frame.place_forget()
         except Exception as e:
             pass
 
@@ -395,7 +502,7 @@ class Main:
 
         con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
         cur = con.cursor()
-        cur.execute("select * from orders where status LIKE '%COMPLETED%'")
+        cur.execute("select * from orders where status LIKE '%COMPLETED%' ORDER BY id DESC")
         rows = cur.fetchall()
         if len(rows)!=0:
             self.completed_order_table.delete(*self.completed_order_table.get_children())
@@ -410,9 +517,25 @@ class Main:
 
         try:
             self.pending_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.completed_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.order.place_forget()
+        except Exception as e:
+            pass
+        
+        try:
             self.data.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.inloom_frame.place_forget()
         except Exception as e:
             pass
@@ -507,7 +630,7 @@ class Main:
 
         con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
         cur = con.cursor()
-        cur.execute("select * from orders where status LIKE '%Cancelled%'")
+        cur.execute("select * from orders where status LIKE '%Cancelled%' ORDER BY id DESC")
         rows = cur.fetchall()
         if len(rows)!=0:
             self.cancelled_order_table.delete(*self.cancelled_order_table.get_children())
@@ -522,9 +645,25 @@ class Main:
 
         try:
             self.pending_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.completed_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.order.place_forget()
+        except Exception as e:
+            pass
+        
+        try:
             self.data.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.cancelled_frame.place_forget()
         except Exception as e:
             pass
@@ -619,7 +758,7 @@ class Main:
 
         con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
         cur = con.cursor()
-        cur.execute("select * from orders where status LIKE '%IN LOOM%'")
+        cur.execute("select * from orders where status LIKE '%IN LOOM%' ORDER BY id DESC")
         rows = cur.fetchall()
         if len(rows)!=0:
             self.inloom_order_table.delete(*self.inloom_order_table.get_children())
@@ -634,10 +773,25 @@ class Main:
 
         try:
             self.completed_frame.place_forget()
-            self.inloom_frame.place_forget()
-            self.cancelled_frame.place_forget()
+        except Exception as e:
+            pass
+
+        try:
             self.order.place_forget()
+        except Exception as e:
+            pass
+        
+        try:
             self.data.place_forget()
+        except Exception as e:
+            pass
+
+        try:
+            self.cancelled_frame.place_forget()
+        except Exception as e:
+            pass
+        try:
+            self.inloom_frame.place_forget()
         except Exception as e:
             pass
         
@@ -731,7 +885,7 @@ class Main:
 
         con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
         cur = con.cursor()
-        cur.execute("select * from orders where status LIKE '%PENDING%'")
+        cur.execute("select * from orders where status LIKE '%PENDING%' ORDER BY id DESC")
         rows = cur.fetchall()
         if len(rows)!=0:
             self.pending_order_table.delete(*self.pending_order_table.get_children())
@@ -748,6 +902,7 @@ class Main:
         mymenu.add_command(label="IN LOOM Orders", command=self.inloom_orders)
         mymenu.add_command(label="Completed Orders", command=self.completed_orders)
         mymenu.add_command(label="Cancelled Orders", command=self.cancelled_orders)
+        mymenu.add_command(label="Get Short Data", command=self.shortData)
         self.root.config(menu=mymenu)
 
     # Data Frame
@@ -889,7 +1044,37 @@ class Main:
         self.allData()
         self.tableFrame()
         self.fetch_orders()
+        self.lastOrderNo()
 
+
+    # Get Data Function
+    def getData(self):
+        try:
+            engine = sqlalchemy.create_engine('mysql+pymysql://root:@localhost:3306/manage_orders')
+            self.start_date = self.short_date_var.get()
+            self.end_date = self.short_date_var2.get()
+            if self.partyname_data.get() == "" and self.status_data.get() == "":
+                df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE date >= '{self.start_date}' and date <= '{self.end_date}'", engine)
+                df.to_excel("New Short Data.xlsx")
+                messagebox.showinfo("Success","Short Data fetched Successfully.")
+                os.startfile("New Short Data.xlsx","open")
+            elif self.partyname_data.get() != "" and self.status_data.get() == "":
+                df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE partyname = '{self.partyname_data.get()}' and date between '{self.start_date}' and '{self.end_date}'", engine)
+                df.to_excel("New Short Data.xlsx")
+                messagebox.showinfo("Success","Short Data fetched Successfully.")
+                os.startfile("New Short Data.xlsx","open")
+            elif self.status_data.get() != "" and self.partyname_data.get() != "":
+                df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE partyname = '{self.partyname_data.get()}' and status = '{self.status_data.get()}' and date between '{self.start_date}' and '{self.end_date}'", engine)
+                df.to_excel("New Short Data.xlsx")
+                messagebox.showinfo("Success","Short Data fetched Successfully.")
+                os.startfile("New Short Data.xlsx","open")
+            elif self.status_data.get() != "" and self.partyname_data.get() == "":
+                df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE status = '{self.status_data.get()}' and date between '{self.start_date}' and '{self.end_date}'", engine)
+                df.to_excel("New Short Data.xlsx")
+                messagebox.showinfo("Success","Short Data fetched Successfully.")
+                os.startfile("New Short Data.xlsx","open")
+        except Exception as e:
+            print(e)
 
     # Print Function
     def print(self):
@@ -988,7 +1173,7 @@ class Main:
                     con.close()
                     self.excelData()
         except Exception as e:
-            messagebox.showwarning("Warning","Something went wrong...")
+            messagebox.showwarning("Warning",e)
 
     def lg(self):
             if self.txt_username.get() == "" or self.txt_password.get() == "":
@@ -1009,6 +1194,7 @@ class Main:
                         self.allData()
                         self.tableFrame()
                         self.fetch_orders()
+                        self.lastOrderNo()
                         self.menu()
                 except Exception as es:
                     messagebox.showerror("Error",f"Error due to: {str(es)}",parent=self.root)
@@ -1020,7 +1206,7 @@ class Main:
         try:
             con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
             cur = con.cursor()
-            cur.execute("select * from orders where status = 'pending'")
+            cur.execute("select * from orders where status = 'pending' ORDER BY id DESC")
             rows = cur.fetchall()
             if len(rows)!=0:
                 self.order_table.delete(*self.order_table.get_children())
@@ -1031,6 +1217,15 @@ class Main:
         except Exception as e:
             messagebox.showwarning("No Data","You have no Data to show")
             
+    # Last Order No.
+    def lastOrderNo(self):
+        con=pymysql.connect(host="localhost",user="root",password="",database="manage_orders")
+        cur = con.cursor()
+        cur.execute("SELECT orderno FROM orders ORDER BY id DESC LIMIT 1")
+        rows = cur.fetchone()
+        self.txt_lastorder_var.set(rows)
+        con.commit()
+        con.close()
 
     # Update Data to Database
     def update_order(self):
@@ -1043,49 +1238,50 @@ class Main:
                     cur = con.cursor()
                     cur.execute("update orders set date=%s,partyname=%s,status=%s, designno=%s,pick=%s,mtr=%s,wq=%s,panno=%s,d1=%s,q1=%s,c1=%s,d2=%s,q2=%s,c2=%s,d3=%s,q3=%s,c3=%s,d4=%s,q4=%s,c4=%s,d5=%s,q5=%s,c5=%s,d6=%s,q6=%s,c6=%s,d7=%s,q7=%s,c7=%s,d8=%s,q8=%s,c8=%s, orderno=%s where id=%s",(
                         self.txt_date.get(),
-                        self.txt_partyname.get(),
-                        self.txt_status.get(),
-                        self.txt_designno.get(),
+                        self.txt_partyname.get().upper(),
+                        self.txt_status.get().upper(),
+                        self.txt_designno.get().upper(),
                         self.txt_pick.get(),
                         self.txt_meter.get(),
-                        self.txt_wq.get(),
+                        self.txt_wq.get().upper(),
                         self.txt_panno.get(),
                         self.txt_deniyar1.get(),
-                        self.txt_quality1.get(),
-                        self.txt_color1.get(),
+                        self.txt_quality1.get().upper(),
+                        self.txt_color1.get().upper(),
                         self.txt_deniyar2.get(),
-                        self.txt_quality2.get(),
-                        self.txt_color2.get(),
+                        self.txt_quality2.get().upper(),
+                        self.txt_color2.get().upper(),
                         self.txt_deniyar3.get(),
-                        self.txt_quality3.get(),
-                        self.txt_color3.get(),
+                        self.txt_quality3.get().upper(),
+                        self.txt_color3.get().upper(),
                         self.txt_deniyar4.get(),
-                        self.txt_quality4.get(),
-                        self.txt_color4.get(),
+                        self.txt_quality4.get().upper(),
+                        self.txt_color4.get().upper(),
                         self.txt_deniyar5.get(),
-                        self.txt_quality5.get(),
-                        self.txt_color5.get(),
+                        self.txt_quality5.get().upper(),
+                        self.txt_color5.get().upper(),
                         self.txt_deniyar6.get(),
-                        self.txt_quality6.get(),
-                        self.txt_color6.get(),
+                        self.txt_quality6.get().upper(),
+                        self.txt_color6.get().upper(),
                         self.txt_deniyar7.get(),
-                        self.txt_quality7.get(),
-                        self.txt_color7.get(),
+                        self.txt_quality7.get().upper(),
+                        self.txt_color7.get().upper(),
                         self.txt_deniyar8.get(),
-                        self.txt_quality8.get(),
-                        self.txt_color8.get(),
+                        self.txt_quality8.get().upper(),
+                        self.txt_color8.get().upper(),
                         self.txt_orderno.get(),
                         self.id_var
                         ))
                     con.commit()
                     messagebox.showinfo("Success","Your order Updated Successfully")
                     self.fetch_orders()
+                    self.lastOrderNo()
                     con.close()
                     self.excelData()
                 except Exception as e:
-                    messagebox.showwarning("Warning","Something went wrong...")
+                    messagebox.showwarning("Warning",e)
         except Exception as e:
-            messagebox.showwarning("Warning","Something went wrong...")
+            messagebox.showwarning("Warning",e)
 
     # Delete Data from Database
     def delete_orders(self):
@@ -1103,6 +1299,7 @@ class Main:
                     messagebox.showinfo("Success","Your Order Deleted Successfully")
                     self.fetch_orders()
                     self.excelData()
+                    self.lastOrderNo()
             else:
                 messagebox.showwarning("Warning","Please select your order to delete")
         except Exception as e:
@@ -1125,43 +1322,44 @@ class Main:
                         cur.execute("insert into orders values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(
                             self.id_var == "",
                             self.txt_date.get(),
-                            self.txt_partyname.get(),
-                            self.txt_status.get(),
+                            self.txt_partyname.get().upper(),
+                            self.txt_status.get().upper(),
                             self.txt_orderno.get(),
-                            self.txt_designno.get(),
+                            self.txt_designno.get().upper(),
                             self.txt_pick.get(),
                             self.txt_meter.get(),
-                            self.txt_wq.get(),
+                            self.txt_wq.get().upper(),
                             self.txt_panno.get(),
                             self.txt_deniyar1.get(),
-                            self.txt_quality1.get(),
-                            self.txt_color1.get(),
+                            self.txt_quality1.get().upper(),
+                            self.txt_color1.get().upper(),
                             self.txt_deniyar2.get(),
-                            self.txt_quality2.get(),
-                            self.txt_color2.get(),
+                            self.txt_quality2.get().upper(),
+                            self.txt_color2.get().upper(),
                             self.txt_deniyar3.get(),
-                            self.txt_quality3.get(),
-                            self.txt_color3.get(),
+                            self.txt_quality3.get().upper(),
+                            self.txt_color3.get().upper(),
                             self.txt_deniyar4.get(),
-                            self.txt_quality4.get(),
-                            self.txt_color4.get(),
+                            self.txt_quality4.get().upper(),
+                            self.txt_color4.get().upper(),
                             self.txt_deniyar5.get(),
-                            self.txt_quality5.get(),
-                            self.txt_color5.get(),
+                            self.txt_quality5.get().upper(),
+                            self.txt_color5.get().upper(),
                             self.txt_deniyar6.get(),
-                            self.txt_quality6.get(),
-                            self.txt_color6.get(),
+                            self.txt_quality6.get().upper(),
+                            self.txt_color6.get().upper(),
                             self.txt_deniyar7.get(),
-                            self.txt_quality7.get(),
-                            self.txt_color7.get(),
+                            self.txt_quality7.get().upper(),
+                            self.txt_color7.get().upper(),
                             self.txt_deniyar8.get(),
-                            self.txt_quality8.get(),
-                            self.txt_color8.get()
+                            self.txt_quality8.get().upper(),
+                            self.txt_color8.get().upper()
                                 
                         ))
                         con.commit()
                         messagebox.showinfo("Success","Your order Inserted Successfully")
                         self.fetch_orders()
+                        self.lastOrderNo()
                         con.close()
                         self.excelData()
                     else:
@@ -1213,7 +1411,7 @@ class Main:
             else:
                 messagebox.showerror("Error","Please enter required details.")
         except Exception as e:
-            messagebox.showwarning("Warning","Please login to search your order.")
+            messagebox.showwarning("Warning",e)
             
 
     # Clear All Fields
