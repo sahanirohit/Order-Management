@@ -20,12 +20,12 @@ from collections import defaultdict
 
 
 class Main:
-    def __init__(self, root, frame):
+    def __init__(self, root):
         self.root = root
         self.root.state("zoomed")
         self.root.title("Order Management System")
         self.root.minsize(1370, 720)   
-        self.root.config(bg="#FDEFF4")
+        self.root.config(bg="#16697a")
         self.update_var = StringVar()
         self.partyname_data = StringVar()
         self.status_data = StringVar()
@@ -316,18 +316,18 @@ class Main:
 
         # Row 11
         
-        self.btn_insert = Button(self.order,text="INSERT", command=self.insert_order, font=("times new roman",8,"normal"),bd=0).place(x=20,y=660,width=80, height=30)
+        self.btn_insert = Button(self.order,text="INSERT", command=self.insert_order, font=("times new romans",8,"bold"),bd=0, bg="#3CCF4E", fg="white").place(x=20,y=660,width=80, height=30)
             
-        self.btn_update = Button(self.order,text="UPDATE", command=self.update_order, font=("times new roman",8,"normal"),bd=0)
+        self.btn_update = Button(self.order,text="UPDATE", command=self.update_order, font=("times new roman",8,"bold"),bd=0, bg="#FEB139", fg="white")
 
     
         self.btn_update.place(x=135,y=660,width=80, height=30)
             
-        self.btn_delete = Button(self.order,text="DELETE", command=self.delete_orders, font=("times new roman",8,"normal"),bd=0).place(x=245,y=660,width=80, height=30)
+        self.btn_delete = Button(self.order,text="DELETE", command=self.delete_orders, font=("times new roman",8,"bold"),bd=0, bg="#D61C4E", fg="white").place(x=245,y=660,width=80, height=30)
             
-        self.btn_print = Button(self.order,text="PRINT", command=self.print, font=("times new roman",8,"normal"),bd=0).place(x=360,y=660,width=80, height=30)
+        self.btn_print = Button(self.order,text="PRINT", command=self.print, font=("times new roman",8,"bold"),bd=0, bg="#0F3D3E", fg="white").place(x=360,y=660,width=80, height=30)
 
-        self.btn_clear = Button(self.order,text="CLEAR", command=self.clear_orders, font=("times new roman",8,"normal"),bd=0).place(x=485,y=660,width=80, height=30)
+        self.btn_clear = Button(self.order,text="CLEAR", command=self.clear_orders, font=("times new roman",8,"bold"),bd=0, bg="#2F8F9D", fg="white").place(x=485,y=660,width=80, height=30)
 
     # Short Data
     def shortData(self):
@@ -383,7 +383,7 @@ class Main:
         self.txt_date2 = DateEntry(self.short_data, width= 10, textvariable=self.short_date_var2, bg="#EEEEEE",bd=0, date_pattern='yyyy-mm-dd')
         self.txt_date2.place(x=300,y=70)
 
-        short_data_btn = Button(self.short_data,text="GET DATA",bd=0,command=self.getData,font=("times new roman",10,"bold"),fg="#141E27",bg="#42C2FF").place(x=240,y=200,width=100, height=25)
+        short_data_btn = Button(self.short_data,text="GET DATA",bd=0,command=self.getData,font=("times new roman",10,"bold"),fg="white",bg="#0F3D3E").place(x=240,y=200,width=100, height=25)
     
     # Completed Orders Data
     def completed_orders(self):
@@ -1055,24 +1055,36 @@ class Main:
             self.end_date = self.short_date_var2.get()
             if self.partyname_data.get() == "" and self.status_data.get() == "":
                 df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE date >= '{self.start_date}' and date <= '{self.end_date}'", engine)
-                df.to_excel("New Short Data.xlsx")
-                messagebox.showinfo("Success","Short Data fetched Successfully.")
-                os.startfile("New Short Data.xlsx","open")
+                if len(df) == 0:
+                    messagebox.showinfo("Warning","No Data found, try again!")    
+                else:
+                    df.to_excel("New Short Data.xlsx")
+                    messagebox.showinfo("Success","Short Data fetched Successfully.")
+                    os.startfile("New Short Data.xlsx","open")
             elif self.partyname_data.get() != "" and self.status_data.get() == "":
                 df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE partyname = '{self.partyname_data.get()}' and date between '{self.start_date}' and '{self.end_date}'", engine)
-                df.to_excel("New Short Data.xlsx")
-                messagebox.showinfo("Success","Short Data fetched Successfully.")
-                os.startfile("New Short Data.xlsx","open")
+                if len(df) == 0:
+                    messagebox.showinfo("Warning","No Data found, try again!")    
+                else:
+                    df.to_excel("New Short Data.xlsx")
+                    messagebox.showinfo("Success","Short Data fetched Successfully.")
+                    os.startfile("New Short Data.xlsx","open")
             elif self.status_data.get() != "" and self.partyname_data.get() != "":
                 df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE partyname = '{self.partyname_data.get()}' and status = '{self.status_data.get()}' and date between '{self.start_date}' and '{self.end_date}'", engine)
-                df.to_excel("New Short Data.xlsx")
-                messagebox.showinfo("Success","Short Data fetched Successfully.")
-                os.startfile("New Short Data.xlsx","open")
+                if len(df) == 0:
+                    messagebox.showinfo("Warning","No Data found, try again!")    
+                else:
+                    df.to_excel("New Short Data.xlsx")
+                    messagebox.showinfo("Success","Short Data fetched Successfully.")
+                    os.startfile("New Short Data.xlsx","open")
             elif self.status_data.get() != "" and self.partyname_data.get() == "":
                 df = sql.read_sql(f"SELECT date, partyname, orderno, designno, pick, mtr, c1, c2, c3, c4, c5, c6 FROM orders WHERE status = '{self.status_data.get()}' and date between '{self.start_date}' and '{self.end_date}'", engine)
-                df.to_excel("New Short Data.xlsx")
-                messagebox.showinfo("Success","Short Data fetched Successfully.")
-                os.startfile("New Short Data.xlsx","open")
+                if len(df) == 0:
+                    messagebox.showinfo("Warning","No Data found, try again!")    
+                else:
+                    df.to_excel("New Short Data.xlsx")
+                    messagebox.showinfo("Success","Short Data fetched Successfully.")
+                    os.startfile("New Short Data.xlsx","open")
         except Exception as e:
             print(e)
 
